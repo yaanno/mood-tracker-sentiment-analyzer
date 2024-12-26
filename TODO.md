@@ -61,8 +61,6 @@ Recommended Improvements:
 
 1. Security Enhancements:
 
-# Add authentication
-
 ```
 from fastapi.security import APIKeyHeader
 api_key_header = APIKeyHeader(name="X-API-Key")

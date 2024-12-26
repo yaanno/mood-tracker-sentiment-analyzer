@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 import logging
-from typing import Dict, List, Any
+from typing import List
 from transformers.pipelines.base import Pipeline
 from transformers import pipeline
 
