@@ -10,6 +10,7 @@ python = "^3.11"
 fastapi = "^0.115.6"
 uvicorn = { extras = ["standard"], version = "^0.34.0" }
 transformers = "^4.47.1"
+slowapi = "^0.1.9"
 
 
 [build-system]
