@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -22,6 +23,26 @@ app = FastAPI(
     version="1.0.0"
 )
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, headers: dict[str, str] | None = None):
+        super().__init__(app)
+        self.headers = headers or {
+            "X-Frame-Options": "DENY",
+            "X-Content-Type-Options": "nosniff",
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "Pragma": "no-cache",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+            "Permissions-Policy": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+        }
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        for header_key, header_value in self.headers.items():
+            response.headers[header_key] = header_value
+        return response
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +52,8 @@ app.add_middleware(
     allow_headers=["*"],
     max_age=600,
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Add security middleware
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Configure for production
@@ -90,6 +113,13 @@ classifier = pipeline("text-classification", model="SamLowe/roberta-base-go_emot
 @app.get("/")
 def index():
     return {"message": "app root"}
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": app.version
+    }
 
 @app.post(
     "/analyze",

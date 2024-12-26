@@ -9,6 +9,11 @@
 # https://github.com/docker/awesome-compose
 services:
   server:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
     container_name: sentiment_analyser
     build:
       context: .
