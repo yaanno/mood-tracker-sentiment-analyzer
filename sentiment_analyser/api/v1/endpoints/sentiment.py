@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sentiment_analyser.core.config import get_settings
-from sentiment_analyser.models.schema import SentimentRequest, SentimentResponse
-from sentiment_analyser.services.sentiment import SentimentAnalyzer, get_sentiment_analyzer
+from sentiment_analyser.core.settings import get_settings
+from sentiment_analyser.models.api.schema import SentimentRequest, SentimentResponse
+from sentiment_analyser.services.sentiment.service import get_service
 from sentiment_analyser.core.logging import get_logger
+
 import time
 import uuid
 from typing import Dict, Any
@@ -14,7 +15,6 @@ settings = get_settings()
 @router.post("/analyze", response_model=SentimentResponse)
 async def analyze_sentiment(
     request: SentimentRequest,
-    analyzer: SentimentAnalyzer = Depends(get_sentiment_analyzer)
 ) -> SentimentResponse:
     request_id = str(uuid.uuid4())
     start_time = time.perf_counter()
@@ -29,8 +29,10 @@ async def analyze_sentiment(
     )
     
     try:
+        # TODO: Not ideal but works atm
+        analyzer = await get_service()
         # Perform sentiment analysis
-        result = analyzer.analyze(request.text)
+        result = await analyzer.analyze_sentiment(request.text)
         
         # Calculate processing time
         processing_time = time.perf_counter() - start_time

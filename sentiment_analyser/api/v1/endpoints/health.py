@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from sentiment_analyser.core.config import get_settings
+from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.core.logging import get_logger
-from sentiment_analyser.models.schema import HealthResponse
-from sentiment_analyser.services.sentiment import get_sentiment_analyzer
+from sentiment_analyser.models.api.schema import HealthResponse
+from sentiment_analyser.services.sentiment.service import get_sentiment_service
 
 settings = get_settings()
 router = APIRouter()
@@ -36,7 +36,7 @@ async def health_check(request: Request) -> Dict:
     - Version information
     """
     try:
-        analyzer = get_sentiment_analyzer()
+        analyzer = get_sentiment_service()
         model_status = analyzer is not None
         
         health_info = {

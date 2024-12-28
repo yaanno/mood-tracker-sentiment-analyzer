@@ -3,28 +3,66 @@ import logging
 import logging.handlers
 import os
 import sys
-from functools import lru_cache
+import time
+import uuid
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import datetime
+from functools import lru_cache, wraps
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Generator, Optional, TypeVar, cast
 
-from sentiment_analyser.core.config import get_settings
+from sentiment_analyser.core.settings import get_settings
 
 settings = get_settings()
 
+# Type variables for generic function signatures
+F = TypeVar('F', bound=Callable[..., Any])
+T = TypeVar('T')
+
+@dataclass
+class LogContext:
+    """Context information for logging."""
+    request_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    start_time: float = field(default_factory=time.time)
+    extra_data: Dict[str, Any] = field(default_factory=dict)
+
 class JsonFormatter(logging.Formatter):
-    """Custom JSON formatter for production logging."""
+    """Custom JSON formatter for production logging with enhanced metadata."""
     def format(self, record: logging.LogRecord) -> str:
+        """Format the log record as a JSON string with rich metadata."""
+        # Get the log context from record if available
+        context = getattr(record, 'context', None)
+        
+        # Basic log data
         log_data: Dict[str, Any] = {
-            "timestamp": self.formatTime(record),
+            "timestamp": datetime.fromtimestamp(record.created).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
+            "logger": record.name,
             "module": record.module,
             "function": record.funcName,
+            "line_number": record.lineno,
+            "process_id": record.process,
+            "thread_id": record.thread,
         }
         
+        # Add exception info if present
         if record.exc_info:
-            log_data["exception"] = self.formatException(record.exc_info)
-            
+            log_data["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": str(record.exc_info[1]),
+                "traceback": self.formatException(record.exc_info)
+            }
+        
+        # Add context information if available
+        if context:
+            log_data.update({
+                "request_id": context.request_id,
+                "duration_ms": (time.time() - context.start_time) * 1000,
+                **context.extra_data
+            })
+        
         return json.dumps(log_data)
 
 class CustomFormatter(logging.Formatter):
@@ -84,6 +122,85 @@ def setup_console_handler() -> logging.Handler:
     return console_handler
 
 @lru_cache
+def log_duration(logger: Optional[logging.Logger] = None) -> Callable[[F], F]:
+    """
+    Decorator that logs the duration of a function call.
+    
+    Args:
+        logger: Logger instance to use. If None, gets logger with function's module name
+        
+    Returns:
+        Decorated function that logs its execution time
+    """
+    def decorator(func: F) -> F:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            # Get or create logger
+            nonlocal logger
+            if logger is None:
+                logger = logging.getLogger(func.__module__)
+            
+            start_time = time.time()
+            try:
+                result = func(*args, **kwargs)
+                duration = (time.time() - start_time) * 1000
+                logger.info(
+                    f"Function {func.__name__} completed",
+                    extra={
+                        'duration_ms': duration,
+                        'function': func.__name__
+                    }
+                )
+                return result
+            except Exception as e:
+                duration = (time.time() - start_time) * 1000
+                logger.error(
+                    f"Function {func.__name__} failed",
+                    extra={
+                        'duration_ms': duration,
+                        'function': func.__name__,
+                        'error': str(e)
+                    },
+                    exc_info=True
+                )
+                raise
+        return cast(F, wrapper)
+    return decorator
+
+@contextmanager
+def log_context(
+    logger: logging.Logger,
+    context: Optional[LogContext] = None
+) -> Generator[LogContext, None, None]:
+    """
+    Context manager that attaches context to log records.
+    
+    Args:
+        logger: Logger instance to attach context to
+        context: Optional existing context to use
+        
+    Yields:
+        LogContext instance
+    """
+    if context is None:
+        context = LogContext()
+    
+    # Store original factory
+    old_factory = logging.getLogRecordFactory()
+    
+    # Create new factory that adds context
+    def record_factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
+        record = old_factory(*args, **kwargs)
+        record.context = context  # type: ignore
+        return record
+    
+    try:
+        logging.setLogRecordFactory(record_factory)
+        yield context
+    finally:
+        logging.setLogRecordFactory(old_factory)
+
+@lru_cache
 def get_logger(name: str) -> logging.Logger:
     """
     Get a configured logger instance.
@@ -92,7 +209,7 @@ def get_logger(name: str) -> logging.Logger:
         name: The name of the logger, typically __name__
         
     Returns:
-        A configured logger instance
+        A configured logger instance with appropriate handlers and formatters
     """
     logger = logging.getLogger(name)
     

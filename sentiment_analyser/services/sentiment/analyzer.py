@@ -1,23 +1,36 @@
-from typing import Optional
+"""Core implementation of sentiment analysis using transformers models."""
+from typing import List
 from transformers import pipeline
 from fastapi import HTTPException
 
-from sentiment_analyser.core.config import get_settings
+from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.core.logging import get_logger
-from sentiment_analyser.models.schema import SentimentResponse, EmotionScore
+from sentiment_analyser.models.api.schema import EmotionScore
 
 settings = get_settings()
 logger = get_logger(__name__)
 
 class SentimentAnalyzer:
-    def __init__(self):
+    """Core sentiment analysis implementation using transformers."""
+
+    def __init__(self, model_name: str = settings.model.MODEL_NAME, device: int = -1):
+        """Initialize the sentiment analyzer.
+        
+        Args:
+            model_name: The name of the model to use for analysis
+            device: Device ID to run model on (-1 for CPU)
+            
+        Raises:
+            HTTPException: If model initialization fails
+        """
+        self.model_name = model_name
         try:
             self.model = pipeline(
                 task="sentiment-analysis",
-                model=settings.model.MODEL_NAME,
-                device=-1  # CPU
+                model=model_name,
+                device=device
             )
-            logger.info(f"Model {settings.model.MODEL_NAME} loaded successfully")
+            logger.info(f"Model {model_name} loaded successfully")
         except Exception as e:
             logger.error(f"Failed to initialize model: {str(e)}")
             raise HTTPException(
@@ -25,18 +38,27 @@ class SentimentAnalyzer:
                 detail="Service temporarily unavailable: Failed to initialize model"
             )
 
-    def analyze(self, text: str) -> SentimentResponse:
-        try:
-            # Get predictions from model
-            results = self.model(text, top_k=None)  # Get all possible labels
+    def analyze_text(self, text: str) -> List[EmotionScore]:
+        """Analyze the sentiment of the given text.
+        
+        Args:
+            text: Input text to analyze
             
+        Returns:
+            List of EmotionScore objects with sentiment predictions
+            
+        Raises:
+            ValueError: If model output is invalid
+            HTTPException: If analysis fails
+        """
+        try:
+            results = self.model(text, top_k=None)
             logger.debug(f"Raw model output: {results}")
             
             if not results or not isinstance(results, list):
                 logger.error(f"Invalid model output format: {results}")
                 raise ValueError("Invalid model output format")
 
-            # Convert predictions to EmotionScore objects
             scores = []
             for pred in results:
                 if 'label' not in pred or 'score' not in pred:
@@ -52,11 +74,8 @@ class SentimentAnalyzer:
                 logger.error("No valid predictions found")
                 raise ValueError("No valid sentiment predictions")
 
-            # Create response with all scores
-            return SentimentResponse(
-                text=text,
-                scores=scores
-            )
+            return scores
+            
         except Exception as e:
             logger.error(f"Error during sentiment analysis: {str(e)}")
             raise HTTPException(
@@ -64,10 +83,3 @@ class SentimentAnalyzer:
                 detail="Error processing sentiment analysis"
             )
 
-_analyzer: Optional[SentimentAnalyzer] = None
-
-def get_sentiment_analyzer() -> SentimentAnalyzer:
-    global _analyzer
-    if _analyzer is None:
-        _analyzer = SentimentAnalyzer()
-    return _analyzer
