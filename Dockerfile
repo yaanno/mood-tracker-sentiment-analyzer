@@ -1,7 +1,7 @@
-# # syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
-ARG PYTHON_VERSION=3.13.0
-FROM python:3.11-slim AS base
+ARG PYTHON_VERSION=3.9
+FROM python:${PYTHON_VERSION}-slim AS base
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -16,48 +16,38 @@ ENV PYTHONUNBUFFERED=1 \
 ENV PATH="$POETRY_HOME/bin:$PROJECT_DIR/.venv/bin:$PATH"
 
 # Install system dependencies
-RUN <<EOF
-apt-get update
-apt-get install --no-install-recommends -y curl build-essential
-rm -rf /var/lib/apt/lists/*
-EOF
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential
 
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org | python3 - && chmod a+x /opt/poetry/bin/poetry
 RUN poetry self add poetry-plugin-export
 
-
 # Set the working directory
 WORKDIR $PROJECT_DIR
 
 # Create cache for transformers
-RUN mkdir -p $PROJECT_DIR/.cache
-RUN chmod 777 $PROJECT_DIR/.cache
+RUN mkdir -p $PROJECT_DIR/.cache && chmod 777 $PROJECT_DIR/.cache
 
-# Copy the dependency files
+# Copy the dependency files first
 COPY poetry.lock pyproject.toml ./
 
 # Install dependencies
 RUN poetry install --no-root
 
-RUN pip3 install torch --index-url https://download.pytorch.org/whl/cpu
+# Remove build dependencies
+RUN apt-get remove --purge -y build-essential
 
 # Copy the application code
 COPY sentiment_analyser ./sentiment_analyser
 
-
 # Expose the port
 EXPOSE 8000
 
+# Create a non-root user
 ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+RUN useradd -r -u ${UID} -s /bin/bash appuser
 
 USER appuser
 
