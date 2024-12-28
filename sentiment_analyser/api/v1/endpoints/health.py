@@ -43,6 +43,7 @@ async def health_check(request: Request) -> Dict:
             "status": "healthy" if model_status else "degraded",
             "version": settings.app.VERSION,
             "model_loaded": model_status,
+            "environment": settings.app.ENVIRONMENT
         }
         
         logger.info(

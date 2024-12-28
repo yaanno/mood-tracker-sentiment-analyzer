@@ -1,28 +1,49 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
 services:
   server:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
     container_name: sentiment_analyser
     build:
       context: .
       dockerfile: Dockerfile
-      network: host
     image: sentiment_analyser
-    restart: on-failure:3
+    restart: unless-stopped
     init: true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       - HF_HOME=/code/.cache
+    env_file:
+      - .env
+    volumes:
+      - hf_cache:/code/.cache
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - sentiment_net
+
+volumes:
+  hf_cache:
+    name: sentiment-hf-cache
+
+networks:
+  sentiment_net:
+    driver: bridge

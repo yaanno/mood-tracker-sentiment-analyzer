@@ -54,7 +54,7 @@ def setup_file_handler(log_path: Path) -> Optional[logging.Handler]:
             encoding="utf-8",
         )
         
-        if settings.app.ENV.upper() == "PRODUCTION":
+        if settings.app.ENVIRONMENT.upper() == "PRODUCTION":
             file_handler.setFormatter(JsonFormatter())
         else:
             file_handler.setFormatter(
@@ -72,7 +72,7 @@ def setup_console_handler() -> logging.Handler:
     """Set up console logging handler with appropriate formatting."""
     console_handler = logging.StreamHandler()
     
-    if settings.app.ENV.upper() == "PRODUCTION":
+    if settings.app.ENVIRONMENT.upper() == "PRODUCTION":
         console_handler.setFormatter(JsonFormatter())
     else:
         console_handler.setFormatter(
@@ -100,7 +100,7 @@ def get_logger(name: str) -> logging.Logger:
     if not logger.handlers:
         log_level = (
             logging.DEBUG 
-            if settings.app.ENV.upper() != "PRODUCTION"
+            if settings.app.ENVIRONMENT.upper() != "PRODUCTION"
             else logging.INFO
         )
         logger.setLevel(log_level)

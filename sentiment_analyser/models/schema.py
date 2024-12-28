@@ -38,6 +38,13 @@ class StatusEnum(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
     WARNING = "warning"
+
+class HealthEnum(str, Enum):
+    """Enumeration for API response health values."""
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    UNHEALTHY = "unhealthy"
+
 class SentimentRequest(BaseModel):
     """
     Request model for sentiment analysis.
@@ -45,15 +52,26 @@ class SentimentRequest(BaseModel):
     Attributes:
         text: The input text to analyze for sentiment
     """
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(str_strip_whitespace=True, strict=True)
     
     text: str = Field(
         ...,
         min_length=1,
-        max_length=5000,
-        description="Text to analyze for sentiment",
-        examples=["This product is amazing! I love it."]
+        max_length=1000,
+        description="Text to analyze for sentiment (1-1000 characters)",
+        examples=["This is great!"]
     )
+
+    @field_validator('text')
+    def validate_text_content(cls, v: str) -> str:
+        """Validate that the text contains actual words and is not just symbols or whitespace."""
+        # Remove whitespace for checking
+        stripped = v.strip()
+        
+        # Check if text is empty after stripping
+        if not stripped:
+            raise ValueError("Text cannot be empty or contain only whitespace")
+        return stripped
 
 class EmotionScore(BaseModel):
     """
@@ -127,7 +145,7 @@ class HealthResponse(BaseModel):
         model_name: Name of the loaded model
         environment: Current environment (dev/prod)
     """
-    status: StatusEnum = Field(
+    status: HealthEnum = Field(
         ...,
         description="Service status"
     )
