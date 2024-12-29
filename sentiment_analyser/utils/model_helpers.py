@@ -3,12 +3,14 @@
 This module provides common functions for working with ML models,
 including loading, caching, and batch processing.
 """
+
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 import json
 
 from transformers import PreTrainedTokenizer, PreTrainedModel
 import torch
+
 
 def load_model_config(config_path: Path) -> Dict[str, Any]:
     """Load model configuration from file.
@@ -25,6 +27,7 @@ def load_model_config(config_path: Path) -> Dict[str, Any]:
     except Exception as e:
         raise RuntimeError(f"Failed to load model config: {e}")
 
+
 def get_device() -> torch.device:
     """Get appropriate device for model inference.
 
@@ -37,11 +40,12 @@ def get_device() -> torch.device:
         return torch.device("mps")
     return torch.device("cpu")
 
+
 def batch_tokenize(
     texts: List[str],
     tokenizer: PreTrainedTokenizer,
     max_length: Optional[int] = None,
-    batch_size: int = 32
+    batch_size: int = 32,
 ) -> List[Dict[str, torch.Tensor]]:
     """Tokenize texts in batches.
 
@@ -56,18 +60,21 @@ def batch_tokenize(
     """
     batches = []
     for i in range(0, len(texts), batch_size):
-        batch_texts = texts[i:i + batch_size]
+        batch_texts = texts[i : i + batch_size]
         batch_encoding = tokenizer(
             batch_texts,
             max_length=max_length,
             truncation=True,
             padding=True,
-            return_tensors="pt"
+            return_tensors="pt",
         )
         batches.append(batch_encoding)
     return batches
 
-def move_model_to_device(model: PreTrainedModel, device: Optional[torch.device] = None) -> PreTrainedModel:
+
+def move_model_to_device(
+    model: PreTrainedModel, device: Optional[torch.device] = None
+) -> PreTrainedModel:
     """Move model to appropriate device.
 
     Args:
@@ -79,6 +86,5 @@ def move_model_to_device(model: PreTrainedModel, device: Optional[torch.device] 
     """
     if device is None:
         device = get_device()
-        
-    return model.to(device)
 
+    return model.to(device)

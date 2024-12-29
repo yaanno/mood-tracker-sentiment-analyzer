@@ -17,9 +17,9 @@ async def test_health_check(client: TestClient):
 
     assert response.status_code == 200
     assert response.json() == {
-            "status": "healthy",
-            "version": settings.app.VERSION,
-            "model_loaded": True,
-            "model_name": None,
-            "environment": "development"
+        "status": "healthy",
+        "version": settings.app.VERSION,
+        "model_loaded": True,
+        "model_name": None,
+        "environment": "development",
     }
