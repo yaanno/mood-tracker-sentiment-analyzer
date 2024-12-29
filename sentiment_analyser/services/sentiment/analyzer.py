@@ -89,10 +89,10 @@ class SentimentAnalyzer:
             del self.model
             logger.info("Cleaned up transformer model resources")
 
-async def __aenter__(self):
-    """Context manager entry."""
-    return self
+    async def __aenter__(self):
+        """Context manager entry."""
+        return self
 
-async def __aexit__(self):
-    """Context manager exit."""
-    self.cleanup()
+    async def __aexit__(self):
+        """Context manager exit."""
+        self.cleanup()
