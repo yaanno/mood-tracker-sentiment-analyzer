@@ -1,11 +1,12 @@
 """Core implementation of sentiment analysis using transformers models."""
 
 from typing import List
-from transformers import pipeline
-from fastapi import HTTPException
 
-from sentiment_analyser.core.settings import get_settings
+from fastapi import HTTPException
+from transformers import pipeline
+
 from sentiment_analyser.core.logging import get_logger
+from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import EmotionScore
 
 settings = get_settings()

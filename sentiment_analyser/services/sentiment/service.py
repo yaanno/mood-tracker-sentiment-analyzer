@@ -1,10 +1,12 @@
 """Service layer for sentiment analysis orchestration."""
 
 from typing import Optional
+
 from fastapi import HTTPException
 
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import SentimentResponse
+
 from .analyzer import SentimentAnalyzer
 from .cache import SentimentCache
 

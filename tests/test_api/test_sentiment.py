@@ -1,7 +1,8 @@
-import pytest
-from httpx import AsyncClient
 from typing import AsyncGenerator
 from unittest.mock import MagicMock
+
+import pytest
+from httpx import AsyncClient
 
 from sentiment_analyser.main import app
 from sentiment_analyser.models.api.schema import SentimentRequest, SentimentResponse

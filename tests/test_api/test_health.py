@@ -1,5 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
+
 from sentiment_analyser.main import app, settings
 
 

@@ -1,8 +1,9 @@
 """Caching layer for sentiment analysis results."""
 
-from typing import Optional, List, Dict
-from datetime import datetime, timedelta
 import asyncio
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import EmotionScore
 

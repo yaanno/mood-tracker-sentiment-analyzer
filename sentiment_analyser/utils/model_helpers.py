@@ -4,12 +4,12 @@ This module provides common functions for working with ML models,
 including loading, caching, and batch processing.
 """
 
-from typing import Any, Dict, List, Optional
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from transformers import PreTrainedTokenizer, PreTrainedModel
 import torch
+from transformers import PreTrainedModel, PreTrainedTokenizer
 
 
 def load_model_config(config_path: Path) -> Dict[str, Any]:
@@ -87,4 +87,4 @@ def move_model_to_device(
     if device is None:
         device = get_device()
 
-    return model.to(device)
+    return model.to(device)  # type: ignore

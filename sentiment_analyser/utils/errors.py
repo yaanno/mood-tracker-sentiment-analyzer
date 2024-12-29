@@ -4,9 +4,10 @@ This module defines custom exceptions and error handling utilities
 for the sentiment analysis service.
 """
 
-from typing import Optional, Dict, Any
-from fastapi import HTTPException
 from http import HTTPStatus
+from typing import Any, Dict, Optional
+
+from fastapi import HTTPException
 
 
 class SentimentAnalysisError(Exception):

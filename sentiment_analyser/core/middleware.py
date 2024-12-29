@@ -2,13 +2,14 @@
 
 import logging
 import time
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from sentiment_analyser.core.exceptions import SentimentAnalyzerError
 
+from sentiment_analyser.core.exceptions import SentimentAnalyzerError
 
 # Global rate limiter instance
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
