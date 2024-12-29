@@ -1,4 +1,4 @@
-name: Pylint
+name: RuffLint
 
 on: [push]
 
