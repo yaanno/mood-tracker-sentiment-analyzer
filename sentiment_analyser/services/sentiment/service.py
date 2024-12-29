@@ -14,8 +14,8 @@ class SentimentService:
     
     def __init__(self):
         """Initialize sentiment analysis service with analyzer and cache."""
-        self.analyzer = SentimentAnalyzer()
-        self.cache = SentimentCache()
+        self.analyzer = None
+        self.cache = None
         
     async def analyze_sentiment(self, text: str) -> SentimentResponse:
         """Analyze sentiment of text, using cache when available.
@@ -73,3 +73,20 @@ async def get_service() -> SentimentService:
         Singleton SentimentService instance
     """
     return get_sentiment_service()
+
+async def startup():
+    """Start up the service and its components."""
+    service = get_sentiment_service()
+    service.analyzer = SentimentAnalyzer()
+    service.cache = SentimentCache()
+    await service.cache.start()
+    logger.info("Service components started")
+
+async def shutdown():
+    """Shut down the service and clean up resources."""
+    service = get_sentiment_service()
+    if service.cache:
+        await service.cache.stop()
+    if service.analyzer:
+        service.analyzer.cleanup()
+    logger.info("Service components shut down")

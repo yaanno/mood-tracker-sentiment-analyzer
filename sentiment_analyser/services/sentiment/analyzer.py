@@ -83,3 +83,16 @@ class SentimentAnalyzer:
                 detail="Error processing sentiment analysis"
             )
 
+    def cleanup(self):
+        """Clean up model resources."""
+        if hasattr(self, 'model'):
+            del self.model
+            logger.info("Cleaned up transformer model resources")
+
+async def __aenter__(self):
+    """Context manager entry."""
+    return self
+
+async def __aexit__(self):
+    """Context manager exit."""
+    self.cleanup()

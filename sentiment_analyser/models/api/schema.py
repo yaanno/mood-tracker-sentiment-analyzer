@@ -114,7 +114,7 @@ class SentimentResponse(BaseModel):
     scores: List[EmotionScore] = Field(
         ...,
         description="List of emotion scores sorted by confidence",
-        min_items=1
+        min_length=1
     )
     status: StatusEnum = Field(
         default=StatusEnum.SUCCESS,

@@ -1,12 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from sentiment_analyser.api.v1.api import api_router
 from sentiment_analyser.core.settings import get_settings
@@ -21,14 +17,14 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     logger.info("Starting up application...")
-    # setup_logging()
-    # Add any startup code here (database connections, model loading etc.)
+    from sentiment_analyser.services.sentiment.service import startup, shutdown
+    await startup()
     
     yield
     
     # Shutdown
     logger.info("Shutting down application...")
-    # Add any cleanup code here
+    await shutdown()
 
 def create_application() -> FastAPI:
     app = FastAPI(
@@ -53,7 +49,7 @@ def create_application() -> FastAPI:
         openapi_schema = get_openapi(
             title=settings.app.PROJECT_NAME,
             version=settings.app.VERSION,
-            description="Sentiment Analysis API with rate limiting and proper error handling",
+            description="Sentiment Analysis API",
             routes=app.routes,
         )
         app.openapi_schema = openapi_schema
