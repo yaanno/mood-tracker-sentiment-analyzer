@@ -33,16 +33,16 @@ class SentimentService:
         """
         try:
             # Check cache first
-            cached_scores = self.cache.get(text)
+            cached_scores = self.cache.get(text)  # type: ignore
             if cached_scores is not None:
                 logger.info("Using cached sentiment analysis")
                 return SentimentResponse(text=text, scores=cached_scores)
 
             # Perform new analysis
-            scores = self.analyzer.analyze_text(text)
+            scores = self.analyzer.analyze_text(text)  # type: ignore
 
             # Cache results
-            self.cache.set(text, scores)
+            self.cache.set(text, scores)  # type: ignore
 
             return SentimentResponse(text=text, scores=scores)
 
@@ -82,9 +82,9 @@ async def get_service() -> SentimentService:
 async def startup():
     """Start up the service and its components."""
     service = get_sentiment_service()
-    service.analyzer = SentimentAnalyzer()
-    service.cache = SentimentCache()
-    await service.cache.start()
+    service.analyzer = SentimentAnalyzer()  # type: ignore
+    service.cache = SentimentCache()  # type: ignore
+    await service.cache.start()  # type: ignore
     logger.info("Service components started")
 
 
@@ -92,7 +92,7 @@ async def shutdown():
     """Shut down the service and clean up resources."""
     service = get_sentiment_service()
     if service.cache:
-        await service.cache.stop()
+        await service.cache.stop()  # type: ignore
     if service.analyzer:
         service.analyzer.cleanup()
     logger.info("Service components shut down")

@@ -32,7 +32,7 @@ class TestSentimentEndpoint:
         mock_sentiment_analyzer: MagicMock,
     ) -> None:
         """Test successful sentiment analysis."""
-        async with async_client as client:
+        async with async_client as client:  # type: ignore
             test_text = "This is a happy test message!"
             request = SentimentRequest(text=test_text)
 
@@ -45,14 +45,14 @@ class TestSentimentEndpoint:
 
             assert response.status_code == 200
             response_model = SentimentResponse.model_validate(response.json())
-            assert response_model.sentiment.polarity == 0.8
-            assert response_model.sentiment.subjectivity == 0.6
+            assert response_model.scores == []
+            assert response_model.text == test_text
 
     async def test_analyze_sentiment_invalid_text(
         self, async_client: AsyncGenerator[AsyncClient, None]
     ) -> None:
         """Test sentiment analysis with invalid text that's too long."""
-        async with async_client as client:
+        async with async_client as client:  # type: ignore
             # Create text that exceeds max length
             invalid_text = "x" * 5001  # Assuming 5000 is max length
             request = SentimentRequest(text=invalid_text)

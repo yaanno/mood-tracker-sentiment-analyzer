@@ -15,12 +15,9 @@ class BaseApplicationSettings(BaseAppSettings):
     ENVIRONMENT: Environment = Field(
         default=Environment.DEVELOPMENT,
         description="Environment the application is running in",
-        env="ENVIRONMENT",
     )
-    DEBUG: bool = Field(default=False, description="Debug mode flag", env="DEBUG")
-    PROJECT_NAME: str = Field(
-        default="Sentiment Analyzer", description="Project name", env="PROJECT_NAME"
-    )
+    DEBUG: bool = Field(default=False, description="Debug mode flag")
+    PROJECT_NAME: str = Field(default="Sentiment Analyzer", description="Project name")
     VERSION: str = Field(
         default="0.1.0",
         description="Project version",
@@ -34,18 +31,28 @@ class BaseApplicationSettings(BaseAppSettings):
     MODEL_CACHE_DIR: DirectoryPath = Field(
         default=Path(".cache"),
         description="Directory to cache downloaded models",
-        env="MODEL_CACHE_DIR",
     )
     ALLOWED_HOSTS: List[str] = Field(
         default=["localhost", "127.0.0.1"],
         description="List of allowed hosts",
-        env="ALLOWED_HOSTS",
     )
     CORS_ORIGINS: List[str] = Field(
         default=["http://localhost:8000", "http://127.0.0.1:8000"],
         description="List of origins allowed to make cross-origin requests",
-        env="CORS_ORIGINS",
     )
+
+    class Config:
+        env_prefix = ""
+        fields = {
+            "ENVIRONMENT": {"env": "ENVIRONMENT"},
+            "DEBUG": {"env": "DEBUG"},
+            "PROJECT_NAME": {"env": "PROJECT_NAME"},
+            "VERSION": {"env": "VERSION"},
+            "API_PREFIX": {"env": "API_PREFIX"},
+            "MODEL_CACHE_DIR": {"env": "MODEL_CACHE_DIR"},
+            "ALLOWED_HOSTS": {"env": "ALLOWED_HOSTS"},
+            "CORS_ORIGINS": {"env": "CORS_ORIGINS"},
+        }
 
 
 class APISettings(BaseAppSettings):
@@ -104,18 +111,21 @@ class SecuritySettings(BaseSettings):
     SECRET_KEY: str = Field(
         default="super-secret-key-please-change-in-production",
         description="Secret key for tokens and cryptography",
-        env="SECRET_KEY",
     )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        default=30,
-        description="Access token expiration in minutes",
-        env="ACCESS_TOKEN_EXPIRE_MINUTES",
+        default=30, description="Access token expiration in minutes"
     )
     ENCRYPTION_ALGORITHM: str = Field(
-        default="HS256",
-        description="Algorithm for JWT token encryption",
-        env="ENCRYPTION_ALGORITHM",
+        default="HS256", description="Algorithm for JWT token encryption"
     )
+
+    class Config:
+        env_prefix = ""
+        fields = {
+            "SECRET_KEY": {"env": "SECRET_KEY"},
+            "ACCESS_TOKEN_EXPIRE_MINUTES": {"env": "ACCESS_TOKEN_EXPIRE_MINUTES"},
+            "ENCRYPTION_ALGORITHM": {"env": "ENCRYPTION_ALGORITHM"},
+        }
 
 
 class Settings(BaseAppSettings):
