@@ -9,7 +9,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from sentiment_analyser.core.exceptions import SentimentAnalyzerError
+from sentiment_analyser.core.errors import SentimentAnalyzerError, to_http_error
 
 # Global rate limiter instance
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
@@ -57,13 +57,11 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         except Exception as exc:
             logger.exception("Unhandled error", exc_info=exc)
+            http_error = to_http_error(exc)
             return JSONResponse(
-                status_code=500,
+                status_code=http_error.status_code,
                 content={
-                    "error": {
-                        "code": "INTERNAL_ERROR",
-                        "message": "An unexpected error occurred",
-                    }
+                    "error": http_error.detail,
                 },
             )
 

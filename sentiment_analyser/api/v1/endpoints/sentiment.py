@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException, Request
 
-from sentiment_analyser.core.exceptions import (
+from sentiment_analyser.core.errors import (
     RateLimitError,
     ServiceError,
     ValidationError,

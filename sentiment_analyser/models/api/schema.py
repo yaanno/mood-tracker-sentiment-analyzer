@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from sentiment_analyser.core.exceptions import ValidationError
+from sentiment_analyser.core.errors import ValidationError
 
 
 class EmotionType(str, Enum):

@@ -4,9 +4,9 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
+from sentiment_analyser.core.errors import CacheError
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import EmotionScore
-from sentiment_analyser.utils.errors import CacheError
 
 logger = get_logger(__name__)
 

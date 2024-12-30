@@ -5,6 +5,11 @@ from typing import List, Optional
 from fastapi import HTTPException
 from transformers import pipeline
 
+from sentiment_analyser.core.errors import (
+    ModelError,
+    SentimentAnalyzerError,
+    ServiceError,
+)
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import EmotionScore
@@ -24,7 +29,7 @@ class SentimentAnalyzer:
             device: Device ID to run model on (-1 for CPU)
 
         Raises:
-            HTTPException: If model initialization fails
+            ModelError: If model initialization fails
         """
         self.model_name = model_name
         try:
@@ -34,10 +39,7 @@ class SentimentAnalyzer:
             logger.info(f"Model {model_name} loaded successfully")
         except Exception as e:
             logger.error(f"Failed to initialize model: {str(e)}")
-            raise HTTPException(
-                status_code=503,
-                detail="Service temporarily unavailable: Failed to initialize model",
-            )
+            raise ModelError("Failed to initialize model")
 
     def reload_model(self, model_name: Optional[str] = None, device: int = -1):
         """Reload the sentiment analysis model.
@@ -55,9 +57,8 @@ class SentimentAnalyzer:
             logger.info(f"Model {self.model_name} reloaded successfully")
         except Exception as e:
             logger.error(f"Failed to reload model: {str(e)}")
-            raise HTTPException(
-                status_code=503,
-                detail="Service temporarily unavailable: Failed to reload model",
+            raise ServiceError(
+                "Service temporarily unavailable: Failed to reload model",
             )
 
     def analyze_text(self, text: str) -> List[EmotionScore]:
@@ -71,7 +72,7 @@ class SentimentAnalyzer:
 
         Raises:
             ValueError: If model output is invalid
-            HTTPException: If analysis fails
+            TextProcessingError: If analysis fails
         """
         try:
             results = self.model(text, top_k=None)
@@ -79,7 +80,7 @@ class SentimentAnalyzer:
 
             if not results or not isinstance(results, list):
                 logger.error(f"Invalid model output format: {results}")
-                raise ValueError("Invalid model output format")
+                raise ModelError("Invalid model output format")
 
             scores = []
             for pred in results:
@@ -95,15 +96,14 @@ class SentimentAnalyzer:
 
             if not scores:
                 logger.error("No valid predictions found")
-                raise ValueError("No valid sentiment predictions")
+                raise ModelError("No valid sentiment predictions")
 
             return scores
 
-        except Exception as e:
+        except SentimentAnalyzerError as e:
             logger.error(f"Error during sentiment analysis: {str(e)}")
-            raise HTTPException(
-                status_code=500, detail="Error processing sentiment analysis"
-            )
+            # raise ServiceError("Error processing sentiment analysis")
+            raise HTTPException(status_code=e.status_code, detail=str(e))
 
     def cleanup(self):
         """Clean up model resources."""
