@@ -1,6 +1,5 @@
 """Middleware components for request processing and error handling."""
 
-import logging
 import time
 
 from fastapi import FastAPI, Request, Response
@@ -10,12 +9,13 @@ from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from sentiment_analyser.core.errors import SentimentAnalyzerError, to_http_error
+from sentiment_analyser.core.logging import get_logger
 
 from .security import SecurityMiddleware
 
 # Global rate limiter instance
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):

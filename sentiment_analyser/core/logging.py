@@ -12,7 +12,7 @@ from functools import lru_cache, wraps
 from pathlib import Path
 from typing import Any, Callable, Dict, Generator, Optional, TypeVar, cast
 
-from sentiment_analyser.core.settings import get_settings
+from .settings import get_settings
 
 settings = get_settings()
 
