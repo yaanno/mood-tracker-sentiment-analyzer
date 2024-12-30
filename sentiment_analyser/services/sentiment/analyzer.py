@@ -1,6 +1,6 @@
 """Core implementation of sentiment analysis using transformers models."""
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from transformers import pipeline
@@ -39,6 +39,27 @@ class SentimentAnalyzer:
                 detail="Service temporarily unavailable: Failed to initialize model",
             )
 
+    def reload_model(self, model_name: Optional[str] = None, device: int = -1):
+        """Reload the sentiment analysis model.
+
+        Args:
+            model_name: Optional new model name to load
+            device: Device ID to run model on (-1 for CPU)
+        """
+        if model_name:
+            self.model_name = model_name
+        try:
+            self.model = pipeline(
+                task="sentiment-analysis", model=self.model_name, device=device
+            )
+            logger.info(f"Model {self.model_name} reloaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to reload model: {str(e)}")
+            raise HTTPException(
+                status_code=503,
+                detail="Service temporarily unavailable: Failed to reload model",
+            )
+
     def analyze_text(self, text: str) -> List[EmotionScore]:
         """Analyze the sentiment of the given text.
 
@@ -54,7 +75,7 @@ class SentimentAnalyzer:
         """
         try:
             results = self.model(text, top_k=None)
-            logger.debug(f"Raw model output: {results}")
+            # logger.debug(f"Raw model output: {results}")
 
             if not results or not isinstance(results, list):
                 logger.error(f"Invalid model output format: {results}")

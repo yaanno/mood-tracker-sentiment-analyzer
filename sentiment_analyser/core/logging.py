@@ -238,13 +238,12 @@ def get_logger(name: str) -> logging.Logger:
         logger.addHandler(setup_console_handler())
 
         # Add file handler if enabled
-        # if settings.logging.log_to_file:
-        #     file_handler = setup_file_handler(
-        #         Path(settings.logging.file_path)
-        #     )
-        #     if file_handler:
-        #         logger.addHandler(file_handler)
+        if settings.logging.LOG_TO_FILE and settings.logging.FILE_PATH:
+            file_handler = setup_file_handler(settings.logging.FILE_PATH)
+            if file_handler:
+                logger.addHandler(file_handler)
 
         logger.propagate = False
-
-    return logger
+    with log_context(logger) as context:
+        context.start_time = time.time()
+        return logger

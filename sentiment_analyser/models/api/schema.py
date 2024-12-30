@@ -3,6 +3,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from sentiment_analyser.core.exceptions import ValidationError
+
 
 class EmotionType(str, Enum):
     """Available emotion types returned by the model."""
@@ -79,7 +81,7 @@ class SentimentRequest(BaseModel):
 
         # Check if text is empty after stripping
         if not stripped:
-            raise ValueError("Text cannot be empty or contain only whitespace")
+            raise ValidationError("Text cannot be empty or contain only whitespace")
         return stripped
 
 

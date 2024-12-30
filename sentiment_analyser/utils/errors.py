@@ -36,6 +36,12 @@ class ValidationError(SentimentAnalysisError):
     pass
 
 
+class CacheError(SentimentAnalysisError):
+    """Raised when cache operations fail."""
+
+    pass
+
+
 def handle_sentiment_error(error: Exception) -> HTTPException:
     """Convert internal errors to HTTP exceptions.
 

@@ -41,18 +41,18 @@ class BaseApplicationSettings(BaseAppSettings):
         description="List of origins allowed to make cross-origin requests",
     )
 
-    class Config:
-        env_prefix = ""
-        fields = {
-            "ENVIRONMENT": {"env": "ENVIRONMENT"},
-            "DEBUG": {"env": "DEBUG"},
-            "PROJECT_NAME": {"env": "PROJECT_NAME"},
-            "VERSION": {"env": "VERSION"},
-            "API_PREFIX": {"env": "API_PREFIX"},
-            "MODEL_CACHE_DIR": {"env": "MODEL_CACHE_DIR"},
-            "ALLOWED_HOSTS": {"env": "ALLOWED_HOSTS"},
-            "CORS_ORIGINS": {"env": "CORS_ORIGINS"},
-        }
+    # class Config:
+    #     env_prefix = ""
+    #     fields = {
+    #         "ENVIRONMENT": {"env": "ENVIRONMENT"},
+    #         "DEBUG": {"env": "DEBUG"},
+    #         "PROJECT_NAME": {"env": "PROJECT_NAME"},
+    #         "VERSION": {"env": "VERSION"},
+    #         "API_PREFIX": {"env": "API_PREFIX"},
+    #         "MODEL_CACHE_DIR": {"env": "MODEL_CACHE_DIR"},
+    #         "ALLOWED_HOSTS": {"env": "ALLOWED_HOSTS"},
+    #         "CORS_ORIGINS": {"env": "CORS_ORIGINS"},
+    #     }
 
 
 class APISettings(BaseAppSettings):
@@ -102,7 +102,10 @@ class LoggingSettings(BaseAppSettings):
         default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         description="Log message format",
     )
-    FILE_PATH: Optional[Path] = Field(default=None, description="Log file path")
+    FILE_PATH: Optional[Path] = Field(
+        default=Path("./logs"), description="Log file path"
+    )
+    LOG_TO_FILE: bool = Field(default=False, description="Enable logging to file")
 
 
 class SecuritySettings(BaseSettings):
@@ -119,13 +122,13 @@ class SecuritySettings(BaseSettings):
         default="HS256", description="Algorithm for JWT token encryption"
     )
 
-    class Config:
-        env_prefix = ""
-        fields = {
-            "SECRET_KEY": {"env": "SECRET_KEY"},
-            "ACCESS_TOKEN_EXPIRE_MINUTES": {"env": "ACCESS_TOKEN_EXPIRE_MINUTES"},
-            "ENCRYPTION_ALGORITHM": {"env": "ENCRYPTION_ALGORITHM"},
-        }
+    # class Config:
+    #     env_prefix = ""
+    #     fields = {
+    #         "SECRET_KEY": {"env": "SECRET_KEY"},
+    #         "ACCESS_TOKEN_EXPIRE_MINUTES": {"env": "ACCESS_TOKEN_EXPIRE_MINUTES"},
+    #         "ENCRYPTION_ALGORITHM": {"env": "ENCRYPTION_ALGORITHM"},
+    #     }
 
 
 class Settings(BaseAppSettings):

@@ -6,6 +6,7 @@ from fastapi import HTTPException
 
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import SentimentResponse
+from sentiment_analyser.utils.errors import CacheError
 
 from .analyzer import SentimentAnalyzer
 from .cache import SentimentCache
@@ -18,8 +19,8 @@ class SentimentService:
 
     def __init__(self):
         """Initialize sentiment analysis service with analyzer and cache."""
-        self.analyzer = None
-        self.cache = None
+        self.analyzer: Optional[SentimentAnalyzer] = None
+        self.cache: Optional[SentimentCache] = None
 
     async def analyze_sentiment(self, text: str) -> SentimentResponse:
         """Analyze sentiment of text, using cache when available.
@@ -35,16 +36,29 @@ class SentimentService:
         """
         try:
             # Check cache first
-            cached_scores = self.cache.get(text)  # type: ignore
-            if cached_scores is not None:
-                logger.info("Using cached sentiment analysis")
-                return SentimentResponse(text=text, scores=cached_scores)
+            cached_scores = None
+            if self.cache is not None:
+                try:
+                    cached_scores = self.cache.get(text)
+                except CacheError as e:
+                    logger.error(f"Cache error: {str(e)}")
+                if cached_scores is not None:
+                    logger.info("Using cached sentiment analysis")
+                    return SentimentResponse(text=text, scores=cached_scores)
 
             # Perform new analysis
-            scores = self.analyzer.analyze_text(text)  # type: ignore
+            if self.analyzer is None:
+                raise HTTPException(
+                    status_code=500, detail="SentimentAnalyzer is not initialized"
+                )
+            scores = self.analyzer.analyze_text(text)
 
             # Cache results
-            self.cache.set(text, scores)  # type: ignore
+            if self.cache is not None:
+                try:
+                    self.cache.set(text, scores)
+                except CacheError as e:
+                    logger.error(f"Cache error: {str(e)}")
 
             return SentimentResponse(text=text, scores=scores)
 
@@ -84,9 +98,9 @@ async def get_service() -> SentimentService:
 async def startup():
     """Start up the service and its components."""
     service = get_sentiment_service()
-    service.analyzer = SentimentAnalyzer()  # type: ignore
-    service.cache = SentimentCache()  # type: ignore
-    await service.cache.start()  # type: ignore
+    service.analyzer = SentimentAnalyzer()
+    service.cache = SentimentCache()
+    await service.cache.start()
     logger.info("Service components started")
 
 
@@ -94,7 +108,7 @@ async def shutdown():
     """Shut down the service and clean up resources."""
     service = get_sentiment_service()
     if service.cache:
-        await service.cache.stop()  # type: ignore
+        await service.cache.stop()
     if service.analyzer:
         service.analyzer.cleanup()
     logger.info("Service components shut down")

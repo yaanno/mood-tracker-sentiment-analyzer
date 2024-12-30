@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import EmotionScore
+from sentiment_analyser.utils.errors import CacheError
 
 logger = get_logger(__name__)
 
@@ -35,15 +36,18 @@ class SentimentCache:
         Returns:
             Cached EmotionScore list if available and not expired, None otherwise
         """
-        if text not in self.cache:
-            return None
+        try:
+            if text not in self.cache:
+                return None
 
-        entry = self.cache[text]
-        if datetime.now() - entry["timestamp"] > self.ttl:
-            del self.cache[text]
-            return None
+            entry = self.cache[text]
+            if datetime.now() - entry["timestamp"] > self.ttl:
+                del self.cache[text]
+                return None
 
-        return [EmotionScore(**score) for score in entry["scores"]]
+            return [EmotionScore(**score) for score in entry["scores"]]
+        except Exception as e:
+            raise CacheError(f"Failed to get cache entry: {e}")
 
     def set(self, text: str, scores: List[EmotionScore]) -> None:
         """Cache sentiment analysis results.
@@ -52,30 +56,39 @@ class SentimentCache:
             text: The analyzed text
             scores: The sentiment scores to cache
         """
-        self.cache[text] = {
-            "timestamp": datetime.now(),
-            "scores": [score.dict() for score in scores],
-        }
-        logger.debug(f"Cached analysis for text: {text[:50]}...")
+        try:
+            self.cache[text] = {
+                "timestamp": datetime.now(),
+                "scores": [score.dict() for score in scores],
+            }
+            logger.debug(f"Cached analysis for text: {text[:50]}...")
+        except Exception as e:
+            raise CacheError(f"Failed to set cache entry: {e}")
 
     async def start(self):
         """Start the background cleanup task."""
-        if not self._running:
-            self._running = True
-            self.cleanup_task = asyncio.create_task(self._cleanup_loop())
-            logger.info("Started cache cleanup task")
+        try:
+            if not self._running:
+                self._running = True
+                self.cleanup_task = asyncio.create_task(self._cleanup_loop())
+                logger.info("Started cache cleanup task")
+        except Exception as e:
+            raise CacheError(f"Failed to start cache: {e}")
 
     async def stop(self):
         """Stop the background cleanup task."""
-        if self._running:
-            self._running = False
-            if self.cleanup_task:
-                self.cleanup_task.cancel()
-                try:
-                    await self.cleanup_task
-                except asyncio.CancelledError:
-                    pass
-            logger.info("Stopped cache cleanup task")
+        try:
+            if self._running:
+                self._running = False
+                if self.cleanup_task:
+                    self.cleanup_task.cancel()
+                    try:
+                        await self.cleanup_task
+                    except asyncio.CancelledError:
+                        pass
+                logger.info("Stopped cache cleanup task")
+        except Exception as e:
+            raise CacheError(f"Failed to stop cache: {e}")
 
     def _cleanup_expired(self):
         """Remove expired entries from cache."""

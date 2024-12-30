@@ -28,6 +28,20 @@ def load_model_config(config_path: Path) -> Dict[str, Any]:
         raise RuntimeError(f"Failed to load model config: {e}")
 
 
+def save_model_config(config: Dict[str, Any], config_path: Path) -> None:
+    """Save model configuration to file.
+
+    Args:
+        config: Model configuration dictionary
+        config_path: Path to save the model config file
+    """
+    try:
+        with config_path.open("w") as f:
+            json.dump(config, f, indent=4)
+    except Exception as e:
+        raise RuntimeError(f"Failed to save model config: {e}")
+
+
 def get_device() -> torch.device:
     """Get appropriate device for model inference.
 

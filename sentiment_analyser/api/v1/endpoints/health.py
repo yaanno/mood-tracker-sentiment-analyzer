@@ -1,11 +1,13 @@
 import time
-from typing import Dict
+from typing import AsyncGenerator, Dict
+
 from fastapi import APIRouter, Depends, Request, Response
-from sentiment_analyser.core.settings import get_settings
+
 from sentiment_analyser.core.logging import get_logger
+from sentiment_analyser.core.middleware import get_limiter
+from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import HealthResponse
 from sentiment_analyser.services.sentiment.service import get_sentiment_service
-from sentiment_analyser.core.middleware import get_limiter
 
 settings = get_settings()
 router = APIRouter()
@@ -13,7 +15,7 @@ logger = get_logger(__name__)
 limiter = get_limiter()
 
 
-async def get_process_time(response: Response) -> None:  # type: ignore
+async def get_process_time(response: Response) -> AsyncGenerator[None, None]:
     """Add X-Process-Time header to track API response time."""
     start_time = time.time()
     yield
