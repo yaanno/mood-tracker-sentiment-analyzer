@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import DirectoryPath, Field, field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 from .config import BaseAppSettings, Environment, LogLevel
@@ -28,10 +28,10 @@ class BaseApplicationSettings(BaseAppSettings):
         description="API prefix for all endpoints",
         pattern="^/[a-zA-Z0-9/_-]+$",
     )
-    MODEL_CACHE_DIR: DirectoryPath = Field(
-        default=Path(".cache"),
-        description="Directory to cache downloaded models",
-    )
+    # MODEL_CACHE_DIR: DirectoryPath = Field(
+    #     default=Path(".cache"),
+    #     description="Directory to cache downloaded models",
+    # )
     ALLOWED_HOSTS: List[str] = Field(
         default=["localhost", "127.0.0.1"],
         description="List of allowed hosts",
