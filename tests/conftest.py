@@ -1,32 +1,46 @@
-# import pytest
-# from fastapi.testclient import TestClient
-# from typing import Generator, AsyncGenerator
-# from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import patch
 
-# from sentiment_analyser.main import app
-# from sentiment_analyser.services.sentiment.analyzer import SentimentAnalyzer
-# from sentiment_analyser.services.sentiment.service import SentimentService
+import pytest
+from fastapi.testclient import TestClient
+
+from sentiment_analyser.main import app
 
 
-# @pytest.fixture
-# def test_client() -> Generator[TestClient, None, None]:
-#     """Fixture that creates a test client for the FastAPI app."""
-#     with TestClient(app) as client:
-#         yield client
+@pytest.fixture(autouse=True)
+def test_env():
+    """Set test environment."""
+    import os
+
+    os.environ["ENVIRONMENT"] = "test"
+    yield
+    os.environ.pop("ENVIRONMENT", None)
 
 
-# @pytest.fixture
-# def mock_sentiment_analyzer() -> Generator[MagicMock, None, None]:
-#     """Fixture that creates a mock sentiment analyzer."""
-#     analyzer = MagicMock(spec=SentimentAnalyzer)
-#     analyzer.analyze = AsyncMock(return_value={"polarity": 0.5, "subjectivity": 0.5})
-#     yield analyzer
+@pytest.fixture
+def client():
+    return TestClient(app)
 
 
-# @pytest.fixture
-# async def mock_sentiment_service(
-#     mock_sentiment_analyzer: MagicMock,
-# ) -> AsyncGenerator[SentimentService, None]:
-#     """Fixture that creates a mock sentiment service with the mock analyzer."""
-#     service = SentimentService(analyzer=mock_sentiment_analyzer())
-#     yield service
+@pytest.fixture
+def test_settings():
+    """Override settings for testing."""
+    from sentiment_analyser.core.settings import get_settings
+
+    settings = get_settings()
+    original_model = settings.model.MODEL_NAME
+    settings.model.MODEL_NAME = "test-model"
+    yield settings
+    settings.model.MODEL_NAME = original_model
+
+
+@pytest.fixture
+def mock_model():
+    """Mock transformer model for testing."""
+    with patch("transformers.pipeline") as mock:
+        yield mock
+
+
+@pytest.fixture
+def headers():
+    """Default headers for API requests."""
+    return {"Content-Type": "application/json", "Accept": "application/json"}
