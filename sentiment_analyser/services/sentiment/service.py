@@ -6,7 +6,6 @@ from fastapi import HTTPException
 
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.models.api.schema import SentimentResponse
-from sentiment_analyser.utils.errors import CacheError
 
 from .analyzer import SentimentAnalyzer
 from .cache import SentimentCache
@@ -38,10 +37,7 @@ class SentimentService:
             # Check cache first
             cached_scores = None
             if self.cache is not None:
-                try:
-                    cached_scores = self.cache.get(text)
-                except CacheError as e:
-                    logger.error(f"Cache error: {str(e)}")
+                cached_scores = self.cache.get(text)
                 if cached_scores is not None:
                     logger.info("Using cached sentiment analysis")
                     return SentimentResponse(text=text, scores=cached_scores)
@@ -55,10 +51,7 @@ class SentimentService:
 
             # Cache results
             if self.cache is not None:
-                try:
-                    self.cache.set(text, scores)
-                except CacheError as e:
-                    logger.error(f"Cache error: {str(e)}")
+                self.cache.set(text, scores)
 
             return SentimentResponse(text=text, scores=scores)
 

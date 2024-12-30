@@ -59,7 +59,7 @@ class SentimentCache:
         try:
             self.cache[text] = {
                 "timestamp": datetime.now(),
-                "scores": [score.dict() for score in scores],
+                "scores": [score.model_dump() for score in scores],
             }
             logger.debug(f"Cached analysis for text: {text[:50]}...")
         except Exception as e:

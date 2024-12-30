@@ -92,7 +92,7 @@ pytest
 ## Linting
 The project uses Ruff for linting:
 ```sh
-ruff
+ruff check
 ```
 
 ## Project Structure
