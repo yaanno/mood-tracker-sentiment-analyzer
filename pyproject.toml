@@ -2,7 +2,7 @@
 name = "sentiment-analyser"
 version = "0.1.0"
 description = ""
-authors = ["Janos Hardi <janos-karoly.hardi@telekom.com>"]
+authors = ["Janos Hardi <janos.hardi@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
