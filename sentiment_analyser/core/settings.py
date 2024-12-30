@@ -109,17 +109,31 @@ class LoggingSettings(BaseAppSettings):
 
 
 class SecuritySettings(BaseSettings):
-    """Security-related settings."""
+    """Security settings for service-to-service authentication."""
 
-    SECRET_KEY: str = Field(
-        default="super-secret-key-please-change-in-production",
-        description="Secret key for tokens and cryptography",
+    API_KEYS: List[str] = Field(
+        default=["dev-key-1", "dev-key-2"],
+        description="List of valid API keys",
     )
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        default=30, description="Access token expiration in minutes"
+    API_RATE_LIMITS: dict[str, int] = Field(
+        default={
+            "dev-key-1": 100,
+            "dev-key-2": 200,
+        },
+        description="Rate limits per minute for each API key",
     )
-    ENCRYPTION_ALGORITHM: str = Field(
-        default="HS256", description="Algorithm for JWT token encryption"
+    PUBLIC_PATHS: List[str] = Field(
+        default=[
+            "/api/v1/docs",
+            "/api/v1/redoc",
+            "/api/v1/openapi.json",
+            "/api/v1/health",
+        ],
+        description="Paths that don't require authentication",
+    )
+    PRIVATE_PATHS: List[str] = Field(
+        default=["/api/v1/sentiment/analyze"],
+        description="Paths that require authentication",
     )
 
     # class Config:

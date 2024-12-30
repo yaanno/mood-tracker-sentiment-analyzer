@@ -43,10 +43,35 @@ def test_health_check(client: TestClient):
 #     assert data["status"] == "success"
 
 
+def test_analyze_no_api_key(client: TestClient):
+    """Test sentiment analysis with empty text."""
+    response = client.post(
+        "/api/v1/sentiment/analyze",
+        json={"text": "test"},
+    )
+
+    assert response.status_code == 500
+
+
+def test_analyze_bad_api_key(client: TestClient):
+    """Test sentiment analysis with empty text."""
+    response = client.post(
+        "/api/v1/sentiment/analyze",
+        json={"text": "test"},
+        headers={"x-api-key": "dev-key-11"},
+    )
+
+    assert response.status_code == 500
+
+
 def test_analyze_sentiment_empty_text(client: TestClient):
     """Test sentiment analysis with empty text."""
-    response = client.post("/api/v1/sentiment/analyze", json={"text": ""})
-
+    response = client.post(
+        "/api/v1/sentiment/analyze",
+        json={"text": ""},
+        headers={"x-api-key": "dev-key-1"},
+    )
+    print(response.json())
     assert response.status_code == 422
 
 
@@ -54,6 +79,7 @@ def test_analyze_sentiment_long_text(client: TestClient):
     """Test sentiment analysis with text exceeding max length."""
     response = client.post(
         "/api/v1/sentiment/analyze",
+        headers={"x-api-key": "dev-key-1"},
         json={"text": "a" * 1001},  # Exceeds max_length=1000
     )
 
@@ -62,7 +88,11 @@ def test_analyze_sentiment_long_text(client: TestClient):
 
 def test_analyze_sentiment_invalid_json(client: TestClient):
     """Test sentiment analysis with invalid JSON."""
-    response = client.post("/api/v1/sentiment/analyze", content="invalid json")
+    response = client.post(
+        "/api/v1/sentiment/analyze",
+        headers={"x-api-key": "dev-key-1"},
+        content="invalid json",
+    )
 
     assert response.status_code == 422
 

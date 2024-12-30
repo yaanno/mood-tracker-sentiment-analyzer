@@ -11,6 +11,8 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 
 from sentiment_analyser.core.errors import SentimentAnalyzerError, to_http_error
 
+from .security import SecurityMiddleware
+
 # Global rate limiter instance
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 logger = logging.getLogger(__name__)
@@ -121,5 +123,6 @@ def setup_middleware(app: FastAPI) -> None:
     Args:
         app: The FastAPI application instance
     """
+    app.add_middleware(SecurityMiddleware)
     app.add_middleware(ErrorHandlingMiddleware)
     app.add_middleware(LoggingMiddleware)
