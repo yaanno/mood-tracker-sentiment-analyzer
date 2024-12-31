@@ -44,3 +44,34 @@ def mock_model():
 def headers():
     """Default headers for API requests."""
     return {"Content-Type": "application/json", "Accept": "application/json"}
+
+
+@pytest.fixture
+def api_key():
+    """Default API key for testing."""
+    return "dev-key-1"
+
+
+@pytest.fixture
+def api_headers(api_key):
+    """Default headers for API requests."""
+    return {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "x-api-key": api_key,
+    }
+
+
+@pytest.fixture
+def mock_sentiment_analyzer():
+    """Mock sentiment analyzer for testing."""
+    with patch(
+        "sentiment_analyser.services.sentiment.service.SentimentAnalyzer"
+    ) as mock:
+        instance = mock.return_value
+        instance.__aenter__.return_value = instance
+        instance.analyze_text.return_value = [
+            {"label": "joy", "score": 0.95},
+            {"label": "sadness", "score": 0.05},
+        ]
+        yield instance

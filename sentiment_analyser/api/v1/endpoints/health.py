@@ -4,7 +4,6 @@ from typing import AsyncGenerator, Dict
 from fastapi import APIRouter, Depends, Request, Response
 
 from sentiment_analyser.core.logging import get_logger
-from sentiment_analyser.core.middleware import get_limiter
 from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import HealthResponse
 from sentiment_analyser.services.sentiment.service import get_sentiment_service
@@ -12,8 +11,6 @@ from sentiment_analyser.services.sentiment.service import get_sentiment_service
 settings = get_settings()
 router = APIRouter()
 logger = get_logger(__name__)
-limiter = get_limiter()
-limit = settings.rate_limit.get_rate_limit()
 
 
 async def get_process_time(response: Response) -> AsyncGenerator[None, None]:
@@ -24,7 +21,6 @@ async def get_process_time(response: Response) -> AsyncGenerator[None, None]:
     response.headers["X-Process-Time"] = str(process_time)
 
 
-@limiter.limit(limit)
 @router.get(
     "",
     response_model=HealthResponse,

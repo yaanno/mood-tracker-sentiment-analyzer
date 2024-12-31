@@ -6,14 +6,11 @@ from fastapi.openapi.utils import get_openapi
 
 from sentiment_analyser.api.v1.api import api_router
 from sentiment_analyser.core.logging import get_logger
-from sentiment_analyser.core.middleware import get_limiter, setup_middleware
+from sentiment_analyser.core.middleware import setup_middleware
 from sentiment_analyser.core.settings import get_settings
 
 settings = get_settings()
 logger = get_logger(__name__)
-
-# Get the global rate limiter
-limiter = get_limiter()
 
 
 @asynccontextmanager
@@ -40,9 +37,6 @@ def create_application() -> FastAPI:
         docs_url=f"{settings.app.API_PREFIX}/docs",
         redoc_url=f"{settings.app.API_PREFIX}/redoc",
     )
-
-    # Set up rate limiter
-    app.state.limiter = limiter
 
     # Set up middlewares
     setup_middleware(app)
