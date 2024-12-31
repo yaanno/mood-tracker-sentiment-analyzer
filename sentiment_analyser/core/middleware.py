@@ -14,7 +14,12 @@ from sentiment_analyser.core.logging import get_logger
 from .security import SecurityMiddleware
 
 # Global rate limiter instance
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["60/minute"],
+    headers_enabled=True,
+    swallow_errors=False,
+)
 logger = get_logger(__name__)
 
 
@@ -39,7 +44,8 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         except SentimentAnalyzerError as e:
             logger.error(
-                "Application error",
+                "Error occurred: %s",
+                e.message,
                 extra={
                     "error_code": e.code,
                     "error_message": e.message,

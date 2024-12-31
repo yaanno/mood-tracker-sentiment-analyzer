@@ -3,12 +3,12 @@
 import hmac
 import logging
 
-from fastapi import HTTPException, Request, Security
+from fastapi import Request
 from fastapi.security import APIKeyHeader
 from slowapi import Limiter
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .errors import ServiceError
+from .errors import AuthenticationError
 from .settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -39,27 +39,6 @@ def verify_api_key(api_key: str) -> bool:
     )
 
 
-async def get_api_key(
-    api_key: str = Security(API_KEY_HEADER),
-) -> str:
-    """Dependency for verifying API keys in routes."""
-    if not api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="Missing API key",
-            headers={"WWW-Authenticate": "APIKey"},
-        )
-
-    if not verify_api_key(api_key):
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid API key",
-            headers={"WWW-Authenticate": "APIKey"},
-        )
-
-    return api_key
-
-
 class SecurityMiddleware(BaseHTTPMiddleware):
     """Middleware for API key verification and rate limiting."""
 
@@ -80,13 +59,16 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             if request.url.path.startswith(public_path):
                 return await call_next(request)
 
-        # For analyze endpoints, let FastAPI handle JSON parsing first
-
         for private_path in self.settings.security.PRIVATE_PATHS:
             if request.url.path.startswith(private_path):
                 api_key = request.headers.get("X-API-Key")
-                if not verify_api_key(api_key or ""):
-                    raise ServiceError(
+                if not api_key:
+                    raise AuthenticationError(
+                        message="Missing API key",
+                        details={"header": "X-API-Key"},
+                    )
+                if not verify_api_key(api_key):
+                    raise AuthenticationError(
                         message="Invalid API key",
                         details={"header": "X-API-Key"},
                     )

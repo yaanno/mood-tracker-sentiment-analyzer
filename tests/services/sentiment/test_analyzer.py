@@ -32,10 +32,9 @@ def analyzer(mock_pipeline: Mock):
 # def test_analyzer_initialization_failure(mock_pipeline: Mock):
 #     """Test analyzer initialization failure."""
 #     mock_pipeline.side_effect = Exception("Model loading failed")
-#     with pytest.raises(HTTPException) as exc_info:
+#     with pytest.raises(ModelError) as exc_info:
 #         SentimentAnalyzer(model_name="test-model")
-#     assert exc_info.value.status_code == 503
-#     assert "Failed to initialize model" in str(exc_info.value.detail)
+#     assert str(exc_info.value) == "Model loading failed"
 
 
 def test_analyze_text_success(analyzer: SentimentAnalyzer, mock_pipeline: Mock):

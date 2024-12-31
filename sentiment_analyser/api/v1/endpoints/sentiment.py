@@ -13,15 +13,16 @@ from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.core.middleware import get_limiter
 from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import SentimentRequest, SentimentResponse
-from sentiment_analyser.services.sentiment.service import get_service
+from sentiment_analyser.services.sentiment.service import get_sentiment_service
 
 router = APIRouter()
 logger = get_logger(__name__)
 settings = get_settings()
 limiter = get_limiter()
+limit = settings.rate_limit.get_rate_limit()
 
 
-@limiter.limit("60/minute")
+@limiter.limit(limit)
 @router.post("/analyze", response_model=SentimentResponse)
 async def analyze_sentiment(
     request: SentimentRequest,
@@ -38,9 +39,8 @@ async def analyze_sentiment(
         },
     )
     try:
-        # TODO: Not ideal but works atm
-        analyzer = await get_service()
-        # Perform sentiment analysis
+        analyzer = get_sentiment_service()
+
         result = await analyzer.analyze_sentiment(request.text)
         # Calculate processing time
         processing_time = time.perf_counter() - start_time
@@ -71,7 +71,7 @@ async def analyze_sentiment(
         return SentimentResponse(
             text=request.text,
             scores=result.scores,
-            # metadata=metadata,
+            metadata=metadata,
             model_name=settings.model.MODEL_NAME,
         )
     except ValidationError as e:

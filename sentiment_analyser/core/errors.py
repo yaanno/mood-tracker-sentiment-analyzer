@@ -95,6 +95,18 @@ class ServiceError(SentimentAnalyzerError):
         )
 
 
+class AuthenticationError(SentimentAnalyzerError):
+    """Raised when the authentication fails."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+        super().__init__(
+            message=message,
+            code="AUTH_ERROR",
+            status_code=HTTPStatus.UNAUTHORIZED,
+            details=details,
+        )
+
+
 def to_http_error(error: Exception) -> HTTPException:
     """Convert any exception to an appropriate HTTP exception.
 

@@ -13,6 +13,7 @@ settings = get_settings()
 router = APIRouter()
 logger = get_logger(__name__)
 limiter = get_limiter()
+limit = settings.rate_limit.get_rate_limit()
 
 
 async def get_process_time(response: Response) -> AsyncGenerator[None, None]:
@@ -23,7 +24,7 @@ async def get_process_time(response: Response) -> AsyncGenerator[None, None]:
     response.headers["X-Process-Time"] = str(process_time)
 
 
-@limiter.limit("120/minute")
+@limiter.limit(limit)
 @router.get(
     "",
     response_model=HealthResponse,

@@ -1,6 +1,6 @@
 """Core implementation of sentiment analysis using transformers models."""
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import HTTPException
 from transformers import pipeline
@@ -8,11 +8,11 @@ from transformers import pipeline
 from sentiment_analyser.core.errors import (
     ModelError,
     SentimentAnalyzerError,
-    ServiceError,
 )
 from sentiment_analyser.core.logging import get_logger
 from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.models.api.schema import EmotionScore
+from sentiment_analyser.utils.model_helpers import get_device
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 class SentimentAnalyzer:
     """Core sentiment analysis implementation using transformers."""
 
-    def __init__(self, model_name: str = settings.model.MODEL_NAME, device: int = -1):
+    def __init__(self, model_name: str = settings.model.MODEL_NAME):
         """Initialize the sentiment analyzer.
 
         Args:
@@ -34,32 +34,12 @@ class SentimentAnalyzer:
         self.model_name = model_name
         try:
             self.model = pipeline(
-                task="sentiment-analysis", model=model_name, device=device
+                task="sentiment-analysis", model=model_name, device=get_device()
             )
             logger.info(f"Model {model_name} loaded successfully")
         except Exception as e:
             logger.error(f"Failed to initialize model: {str(e)}")
             raise ModelError("Failed to initialize model")
-
-    def reload_model(self, model_name: Optional[str] = None, device: int = -1):
-        """Reload the sentiment analysis model.
-
-        Args:
-            model_name: Optional new model name to load
-            device: Device ID to run model on (-1 for CPU)
-        """
-        if model_name:
-            self.model_name = model_name
-        try:
-            self.model = pipeline(
-                task="sentiment-analysis", model=self.model_name, device=device
-            )
-            logger.info(f"Model {self.model_name} reloaded successfully")
-        except Exception as e:
-            logger.error(f"Failed to reload model: {str(e)}")
-            raise ServiceError(
-                "Service temporarily unavailable: Failed to reload model",
-            )
 
     def analyze_text(self, text: str) -> List[EmotionScore]:
         """Analyze the sentiment of the given text.

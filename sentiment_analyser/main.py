@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+
 from sentiment_analyser.api.v1.api import api_router
-from sentiment_analyser.core.settings import get_settings
 from sentiment_analyser.core.logging import get_logger
-from sentiment_analyser.core.middleware import setup_middleware
-from sentiment_analyser.core.middleware import get_limiter
-from slowapi.errors import RateLimitExceeded
-from slowapi import _rate_limit_exceeded_handler
+from sentiment_analyser.core.middleware import get_limiter, setup_middleware
+from sentiment_analyser.core.settings import get_settings
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -21,7 +20,7 @@ limiter = get_limiter()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     logger.info("Starting up application...")
-    from sentiment_analyser.services.sentiment.service import startup, shutdown
+    from sentiment_analyser.services.sentiment.service import shutdown, startup
 
     await startup()
 
@@ -44,7 +43,6 @@ def create_application() -> FastAPI:
 
     # Set up rate limiter
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
     # Set up middlewares
     setup_middleware(app)

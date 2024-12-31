@@ -93,6 +93,9 @@ class RateLimitSettings(BaseAppSettings):
     WINDOW_SIZE: int = Field(default=60, description="Time window in seconds")
     BY_IP: bool = Field(default=True, description="Whether to rate limit by IP address")
 
+    def get_rate_limit(self) -> str:
+        return "%d/minute" % (self.DEFAULT_RATE_LIMIT)
+
 
 class LoggingSettings(BaseAppSettings):
     """Logging configuration settings."""

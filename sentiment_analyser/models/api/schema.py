@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -132,6 +132,9 @@ class SentimentResponse(BaseModel):
     )
     model_name: Optional[str] = Field(
         default=None, description="Name of the model used for analysis"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata for the response"
     )
 
     @field_validator("scores")
