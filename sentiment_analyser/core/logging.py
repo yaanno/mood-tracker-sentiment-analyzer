@@ -227,12 +227,7 @@ def get_logger(name: str) -> logging.Logger:
 
     # Only configure if the logger doesn't have handlers
     if not logger.handlers:
-        log_level = (
-            logging.DEBUG
-            if settings.app.ENVIRONMENT.upper() != "PRODUCTION"
-            else logging.INFO
-        )
-        logger.setLevel(log_level)
+        logger.setLevel(settings.logging.LEVEL.value)
 
         # Add console handler
         logger.addHandler(setup_console_handler())

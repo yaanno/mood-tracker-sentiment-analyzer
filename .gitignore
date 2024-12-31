@@ -3,6 +3,7 @@
 **/.venv
 **/.classpath
 **/.env
+**/.env.*
 **/.project
 **/.settings
 **/.toolstarget

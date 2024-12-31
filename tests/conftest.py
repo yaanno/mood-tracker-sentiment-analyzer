@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -8,10 +10,14 @@ from sentiment_analyser.main import app
 
 @pytest.fixture(autouse=True)
 def test_env():
-    """Set test environment."""
-    import os
+    """Set test environment and load test config."""
+    os.environ["ENVIRONMENT"] = "testing"
 
-    os.environ["ENVIRONMENT"] = "test"
+    # Ensure test env file exists
+    test_env_file = Path(__file__).parent.parent / ".env.testing"
+    if not test_env_file.exists():
+        raise FileNotFoundError(f"Test environment file not found: {test_env_file}")
+
     yield
     os.environ.pop("ENVIRONMENT", None)
 
